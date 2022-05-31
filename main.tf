@@ -80,6 +80,10 @@ resource "pagerduty_service_event_rule" "this_p1" {
       value = "critical"
     }
   }
+
+  depends_on = [
+    pagerduty_service_event_rule.this_warning
+  ]
 }
 
 resource "pagerduty_service_event_rule" "this_p2" {
@@ -120,6 +124,10 @@ resource "pagerduty_service_event_rule" "this_p2" {
       value = "error"
     }
   }
+
+  depends_on = [
+    pagerduty_service_event_rule.this_p1
+  ]
 }
 
 resource "pagerduty_service_event_rule" "this_p3" {
@@ -152,6 +160,10 @@ resource "pagerduty_service_event_rule" "this_p3" {
       value = "warning"
     }
   }
+
+  depends_on = [
+    pagerduty_service_event_rule.this_p2
+  ]
 }
 
 resource "pagerduty_service_event_rule" "this_p4" {
@@ -184,6 +196,10 @@ resource "pagerduty_service_event_rule" "this_p4" {
       value = "warning"
     }
   }
+
+  depends_on = [
+    pagerduty_service_event_rule.this_p3
+  ]
 }
 
 resource "pagerduty_service_event_rule" "this_p5" {
@@ -216,4 +232,8 @@ resource "pagerduty_service_event_rule" "this_p5" {
       value = "info"
     }
   }
+
+  depends_on = [
+    pagerduty_service_event_rule.this_p4
+  ]
 }
