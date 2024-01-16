@@ -2,238 +2,86 @@ data "pagerduty_vendor" "datadog" {
   name = "Datadog"
 }
 
-resource "pagerduty_service_event_rule" "this_warning" {
-  service  = var.service_id
-  position = 0 + var.rule_position_addition
-  disabled = var.disabled
-
-  conditions {
-    operator = "and"
-
-    subconditions {
-      operator = "equals"
-      parameter {
-        path  = "source"
-        value = data.pagerduty_vendor.datadog.name
-      }
-    }
-
-    subconditions {
-      operator = "equals"
-      parameter {
-        path  = "severity"
-        value = "warning"
-      }
-    }
-
-    subconditions {
-      operator = "matches"
-      parameter {
-        path  = "custom_details.alert_priority"
-        value = "^P(1|2)$"
-      }
-    }
-  }
-
-  actions {
-    severity {
-      value = "warning"
-    }
-  }
+data "pagerduty_priority" "p1" {
+  name = "P1"
 }
 
-resource "pagerduty_service_event_rule" "this_p1" {
-  service  = var.service_id
-  position = 1 + var.rule_position_addition
-  disabled = var.disabled
-
-  conditions {
-    operator = "and"
-
-    subconditions {
-      operator = "equals"
-      parameter {
-        path  = "custom_details.priority"
-        value = "normal"
-      }
-    }
-
-    subconditions {
-      operator = "equals"
-      parameter {
-        path  = "severity"
-        value = "error"
-      }
-    }
-
-    subconditions {
-      operator = "equals"
-      parameter {
-        path  = "custom_details.alert_priority"
-        value = "P1"
-      }
-    }
-  }
-
-  actions {
-    severity {
-      value = "critical"
-    }
-  }
-
-  depends_on = [
-    pagerduty_service_event_rule.this_warning
-  ]
+data "pagerduty_priority" "p2" {
+  name = "P2"
 }
 
-resource "pagerduty_service_event_rule" "this_p2" {
-  service  = var.service_id
-  position = 2 + var.rule_position_addition
-  disabled = var.disabled
-
-  conditions {
-    operator = "and"
-
-    subconditions {
-      operator = "equals"
-      parameter {
-        path  = "custom_details.priority"
-        value = "normal"
-      }
-    }
-
-    subconditions {
-      operator = "equals"
-      parameter {
-        path  = "severity"
-        value = "error"
-      }
-    }
-
-    subconditions {
-      operator = "equals"
-      parameter {
-        path  = "custom_details.alert_priority"
-        value = "P2"
-      }
-    }
-  }
-
-  actions {
-    severity {
-      value = "error"
-    }
-  }
-
-  depends_on = [
-    pagerduty_service_event_rule.this_p1
-  ]
+data "pagerduty_priority" "p3" {
+  name = "P3"
 }
 
-resource "pagerduty_service_event_rule" "this_p3" {
-  service  = var.service_id
-  position = 3 + var.rule_position_addition
-  disabled = var.disabled
-
-  conditions {
-    operator = "and"
-
-    subconditions {
-      operator = "equals"
-      parameter {
-        path  = "custom_details.priority"
-        value = "normal"
-      }
-    }
-
-    subconditions {
-      operator = "equals"
-      parameter {
-        path  = "custom_details.alert_priority"
-        value = "P3"
-      }
-    }
-  }
-
-  actions {
-    severity {
-      value = "warning"
-    }
-  }
-
-  depends_on = [
-    pagerduty_service_event_rule.this_p2
-  ]
+data "pagerduty_priority" "p4" {
+  name = "P4"
 }
 
-resource "pagerduty_service_event_rule" "this_p4" {
-  service  = var.service_id
-  position = 4 + var.rule_position_addition
-  disabled = var.disabled
-
-  conditions {
-    operator = "and"
-
-    subconditions {
-      operator = "equals"
-      parameter {
-        path  = "custom_details.priority"
-        value = "normal"
-      }
-    }
-
-    subconditions {
-      operator = "equals"
-      parameter {
-        path  = "custom_details.alert_priority"
-        value = "P4"
-      }
-    }
-  }
-
-  actions {
-    severity {
-      value = "warning"
-    }
-  }
-
-  depends_on = [
-    pagerduty_service_event_rule.this_p3
-  ]
+data "pagerduty_priority" "p5" {
+  name = "P5"
 }
 
-resource "pagerduty_service_event_rule" "this_p5" {
-  service  = var.service_id
-  position = 5 + var.rule_position_addition
-  disabled = var.disabled
-
-  conditions {
-    operator = "and"
-
-    subconditions {
-      operator = "equals"
-      parameter {
-        path  = "custom_details.priority"
-        value = "normal"
+resource "pagerduty_event_orchestration_service" "datadog" {
+  service                                = pagerduty_service.datadog.id
+  enable_event_orchestration_for_service = var.disabled
+  set {
+    id = "start"
+    rule {
+      condition {
+        expression = "event.source matches '${data.pagerduty_vendor.datadog.name}' and event.severity matches 'warning' and event.custom_details.alert_priority matches '^P(1|2)$'"
+      }
+      actions {
+        severity = "warning"
       }
     }
-
-    subconditions {
-      operator = "equals"
-      parameter {
-        path  = "custom_details.alert_priority"
-        value = "P5"
+    rule {
+      condition {
+        expression = "event.custom_details.priority matches 'normal' and event.severity matches 'error' and event.custom_details.alert_priority matches 'P1'"
+      }
+      actions {
+        priority = data.pagerduty_priority.p1.id
+        severity = "critical"
+      }
+    }
+    rule {
+      condition {
+        expression = "event.custom_details.priority matches 'normal' and event.severity matches 'error' and event.custom_details.alert_priority matches 'P2'"
+      }
+      actions {
+        priority = data.pagerduty_priority.p2.id
+        severity = "error"
+      }
+    }
+    rule {
+      condition {
+        expression = "event.custom_details.priority matches 'normal' and event.custom_details.alert_priority matches 'P3'"
+      }
+      actions {
+        priority = data.pagerduty_priority.p3.id
+        severity = "warning"
+      }
+    }
+    rule {
+      condition {
+        expression = "event.custom_details.priority matches 'normal' and event.custom_details.alert_priority matches 'P4'"
+      }
+      actions {
+        priority = data.pagerduty_priority.p4.id
+        severity = "warning"
+      }
+    }
+    rule {
+      condition {
+        expression = "event.custom_details.priority matches 'normal' and event.custom_details.alert_priority matches 'P5'"
+      }
+      actions {
+        priority = data.pagerduty_priority.p5.id
+        severity = "info"
       }
     }
   }
-
-  actions {
-    severity {
-      value = "info"
-    }
+  catch_all {
+    actions {}
   }
-
-  depends_on = [
-    pagerduty_service_event_rule.this_p4
-  ]
 }
