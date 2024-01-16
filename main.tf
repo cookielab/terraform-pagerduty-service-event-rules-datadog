@@ -24,7 +24,7 @@ data "pagerduty_priority" "p5" {
 
 resource "pagerduty_event_orchestration_service" "datadog" {
   service                                = pagerduty_service.datadog.id
-  enable_event_orchestration_for_service = var.disabled
+  enable_event_orchestration_for_service = var.enabled
   set {
     id = "start"
     rule {

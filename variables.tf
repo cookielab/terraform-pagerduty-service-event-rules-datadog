@@ -3,8 +3,8 @@ variable "service_id" {
   description = "PagerDuty service ID"
 }
 
-variable "disabled" {
+variable "enabled" {
   type        = bool
-  description = "Disable these PagerDuty service event rules"
-  default     = false
+  description = "Enable PagerDuty event orchestration service"
+  default     = true
 }
